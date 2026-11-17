@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Cardápio do dia e pedidos online do Restaurante da Família.">
+  <meta name="theme-color" content="#f3f5fa">
+  <title>Restaurante da Família · Cardápio e pedidos</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body class="storefront">
+  <a class="skip-link" href="#cardapio">Ir para o cardápio</a>
+  <header class="topbar"><div class="wrap top-inner">
+    <a class="brand" href="/" aria-label="Restaurante da Família, início">
+      <span class="brand-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14h16a8 8 0 0 1-16 0ZM2 14h20M9 5c-3 3 3 3 0 6m6-8c-3 3 3 4 0 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><small>RESTAURANTE DA</small><b>Família</b></span>
+    </a>
+    <nav aria-label="Navegação principal"><a href="#carrinho" class="nav-cart"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8h16l1 13H3L4 8Z" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg> Meu pedido <span id="nav-count">0</span></a></nav>
+  </div></header>
+
+  <main class="wrap">
+    <div class="order-layout" id="cardapio">
+      <section class="menu-section" aria-labelledby="menu-title">
+        <header class="menu-intro">
+          <div class="menu-intro-copy">
+            <div class="menu-meta"><span class="eyebrow">Da cozinha da família</span><span id="menu-date" class="date"></span></div>
+            <h1 id="menu-title">Cardápio<br>do dia</h1>
+            <p class="menu-lead">Monte seu almoço para entrega ou retirada.</p>
+          </div>
+          <div class="menu-intro-photo">
+            <img src="/hero.jpg" alt="Feijoada com arroz, couve e farofa" width="800" height="500">
+          </div>
+        </header>
+        <div class="catalog-tools">
+          <div id="filters" class="filters" aria-label="Categorias do cardápio"></div>
+          <form id="quick-form" class="quick"><label class="sr-only" for="quick-item">Número ou nome do item</label><input id="quick-item" enterkeyhint="go" placeholder="Ex.: 1 ou feijoada" autocomplete="off" maxlength="85"><button class="button secondary" type="submit">Adicionar</button></form>
+        </div>
+        <p id="menu-note" class="subtitle">Escolha um prato ou adicione pelo número ou nome.</p>
+        <p id="feedback" class="feedback success-feedback" role="status"></p>
+        <ul id="menu-items" class="menu-items" aria-label="Itens do cardápio"></ul>
+        <p id="empty-menu" class="empty-menu" role="status">Carregando o cardápio…</p>
+      </section>
+      <div class="order-rail">
+      <aside id="carrinho" class="cart" aria-labelledby="cart-title">
+        <div class="cart-head"><div><p class="eyebrow">Cesta de almoço</p><h2 id="cart-title">Meu pedido</h2></div><span id="cart-count" class="cart-count">0 itens</span></div>
+        <div id="cart-empty" class="cart-empty"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8h16l1 13H3L4 8Z" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg><b>Seu carrinho está vazio</b><p>Adicione um item do cardápio para começar.</p></div>
+        <ul id="cart-items" class="cart-items" aria-label="Itens no carrinho"></ul>
+        <div class="subtotal"><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
+        <button id="checkout-open" class="button primary full" type="button" disabled>Continuar pedido <span aria-hidden="true">→</span></button>
+        <p class="cart-note">Você confere o resumo antes de abrir o WhatsApp.</p>
+      </aside>
+      </div>
+    </div>
+  </main>
+
+  <div id="mobile-cart" class="mobile-cart" hidden>
+    <a href="#carrinho" class="mobile-cart-info" aria-label="Ver itens do pedido"><span id="mobile-cart-count">Meu pedido</span><strong id="mobile-cart-total">R$ 0,00</strong></a>
+    <button id="mobile-checkout" class="button primary" type="button">Continuar pedido <span aria-hidden="true">→</span></button>
+  </div>
+
+  <footer class="footer"><div class="wrap"><span>Restaurante da Família</span><a href="#cardapio">Voltar ao cardápio ↑</a></div></footer>
+
+  <dialog id="checkout" aria-labelledby="checkout-title">
+    <div class="dialog-head"><div><div id="checkout-step" class="eyebrow">1 DE 2 · DADOS DO PEDIDO</div><h2 id="checkout-title" tabindex="-1">Finalizar pedido</h2></div><button class="close" type="button" data-close="checkout" aria-label="Fechar">×</button></div>
+    <form id="checkout-form">
+      <fieldset><legend>Como deseja receber?</legend><div class="choices">
+        <label><input type="radio" name="mode" value="pickup" checked> Retirada</label>
+        <label><input type="radio" name="mode" value="delivery"> Entrega <span id="fee-label"></span></label>
+      </div></fieldset>
+      <div class="checkout-fields">
+      <label for="name">Seu nome</label><input id="name" name="name" autocomplete="name" maxlength="70" required>
+      <div id="address-box" hidden><label for="address">Endereço com número e bairro</label><input id="address" name="address" autocomplete="street-address" maxlength="200"></div>
+      <label for="payment">Forma de pagamento</label><select id="payment" name="payment" required><option value="pix">Pix a combinar</option><option value="card">Cartão no recebimento</option><option value="cash">Dinheiro</option></select>
+      <div id="change-box" hidden><label for="change">Troco para quanto? (opcional)</label><input id="change" name="change" inputmode="decimal" placeholder="Ex.: 50,00" maxlength="12"></div>
+      <label for="note">Observações (opcional)</label><textarea id="note" name="note" rows="2" maxlength="200" placeholder="Ex.: sem cebola"></textarea>
+      </div>
+      <div class="subtotal"><span>Total</span><strong id="checkout-total"></strong></div>
+      <p id="checkout-error" class="feedback" role="alert"></p>
+      <button type="submit" class="button primary full">Revisar resumo <span aria-hidden="true">→</span></button>
+    </form>
+    <section id="summary-box" hidden>
+      <p>Confira os itens, os dados e o valor do pedido.</p>
+      <p id="receipt-notice" class="feedback" role="status"></p>
+      <div id="receipt" class="receipt"></div>
+      <label class="sr-only" for="summary">Texto para copiar</label><textarea id="summary" rows="6" readonly hidden></textarea>
+      <p id="handoff-note" class="cart-note"></p>
+      <button id="whatsapp" class="button primary full" type="button" hidden>Abrir no WhatsApp <span aria-hidden="true">↗</span></button>
+      <div class="summary-actions"><button id="summary-edit" class="link-button" type="button">← Editar dados</button><button id="summary-copy" class="button secondary" type="button">Copiar resumo</button></div>
+      <p id="copy-feedback" class="feedback" role="status"></p>
+    </section>
+  </dialog>
+
+</body>
+</html>

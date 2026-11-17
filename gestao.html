@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3f5fa">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Painel do restaurante · Restaurante da Família</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/gestao.css">
+  <script type="module" src="/gestao.js"></script>
+</head>
+<body class="admin-page">
+  <a class="skip-link" href="#painel">Ir para o painel</a>
+  <header class="topbar"><div class="wrap top-inner">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14h16a8 8 0 0 1-16 0ZM2 14h20M9 5c-3 3 3 3 0 6m6-8c-3 3 3 4 0 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><small>RESTAURANTE DA</small><b>Família</b></span>
+    </div>
+    <div class="filters management-header-actions">
+      <a class="button secondary view-menu" href="/">Ver cardápio <span aria-hidden="true">↗</span></a>
+      <form action="/gestao/sair" method="post"><button class="button secondary" type="submit">Sair</button></form>
+    </div>
+  </div></header>
+
+  <main id="painel" class="wrap management">
+    <header class="management-intro">
+      <div class="eyebrow">Área do restaurante</div>
+      <h1>Painel do restaurante</h1>
+      <p>Edite os pratos de hoje e configure o recebimento dos pedidos.</p>
+    </header>
+
+    <section class="management-overview" aria-label="Situação do restaurante">
+      <div><span>Cardápio de hoje</span><p id="admin-status" class="management-status" role="status">Carregando painel…</p></div>
+      <div><span>Pedidos pelo WhatsApp</span><p id="contact-state" class="management-status" role="status">—</p><a id="contact-jump" href="#contato" hidden>Editar contato e taxa</a></div>
+    </section>
+
+    <div id="settings" class="management-grid" hidden>
+      <nav class="management-nav" aria-label="Seções do painel">
+        <a href="#editor">Cardápio</a>
+        <a href="#contato">Contato e entrega</a>
+      </nav>
+      <section id="editor" class="management-card menu-editor" aria-labelledby="editor-title">
+        <div class="editor-heading"><div><p class="editor-kicker">PUBLICAÇÃO DIÁRIA</p><h2 id="editor-title" tabindex="-1">Editar cardápio</h2></div><button id="row-add" type="button" class="button secondary">+ Adicionar item</button></div>
+        <p>Edite os nomes e preços. O cardápio publicado vale até a meia-noite.</p>
+        <p id="draft-state" role="status" class="draft-state" hidden></p>
+        <button id="discard-draft" type="button" class="link-button" hidden>Descartar rascunho</button>
+        <form id="menu-form" novalidate>
+          <div id="editor-items" class="editor-list"></div>
+          <p id="editor-limit" class="feedback" role="status"></p>
+          <div class="editor-actions">
+            <div id="undo-removal" class="undo-removal" hidden>
+              <span id="removal-message" role="status"></span>
+              <button id="restore-item" type="button" class="link-button">Desfazer</button>
+            </div>
+            <p id="menu-status" class="feedback success-feedback" role="status"></p>
+            <button type="submit" class="button primary">Publicar cardápio de hoje</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="contato" class="management-card contact-settings" aria-labelledby="contact-title">
+        <p class="editor-kicker">RECEBIMENTO</p>
+        <h2 id="contact-title" tabindex="-1">Contato e entrega</h2>
+        <p>Defina o número que recebe os pedidos e a taxa que aparece no resumo.</p>
+        <form id="contact-form" novalidate>
+          <label for="phone">WhatsApp do restaurante</label>
+          <input id="phone" name="phone" inputmode="tel" autocomplete="tel" placeholder="+55 (85) 99999-9999" maxlength="24" aria-describedby="phone-error">
+          <p id="phone-error" class="field-error"></p>
+          <label for="delivery-fee">Taxa de entrega em reais</label>
+          <input id="delivery-fee" name="fee" inputmode="decimal" placeholder="5,00" maxlength="10" required aria-describedby="fee-error">
+          <p id="fee-error" class="field-error"></p>
+          <button class="button primary full" type="submit">Salvar contato e taxa</button>
+          <p id="contact-status" class="feedback success-feedback" role="status"></p>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
