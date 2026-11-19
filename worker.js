@@ -1,4 +1,6 @@
 const categories = ['Pratos', 'Bebidas', 'Sobremesas'];
+const orderMenuItems = items => [...items].sort((left, right) =>
+  categories.indexOf(left.category) - categories.indexOf(right.category));
 const demo = { phone: '', fee: 500, day: '', items: [
   {name:'Feijoada da casa', description:'Feijão preto, arroz soltinho, couve refogada e farofa crocante.', category:'Pratos', price:2800},
   {name:'Frango grelhado', description:'Filé temperado na casa, com arroz, feijão e salada.', category:'Pratos', price:2200},
@@ -11,10 +13,39 @@ const demo = { phone: '', fee: 500, day: '', items: [
 const clock = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit'});
 const today = () => clock.format(new Date());
 const json = (data,status=200) => Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+const examplePhotos = {
+  'Feijoada da casa': '/fotos-exemplo/feijoada.jpg',
+  'Frango grelhado': '/fotos-exemplo/frango-grelhado.jpg',
+  'Bife acebolado': '/fotos-exemplo/bife-acebolado.jpg',
+  'Prato vegetariano': '/fotos-exemplo/prato-vegetariano.jpg',
+  'Suco natural': '/fotos-exemplo/suco-natural.jpg',
+  'Refrigerante em lata': '/fotos-exemplo/refrigerante-em-lata.jpg',
+};
+
+function withMenuPhoto(item) {
+  const key = value => value.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  const match = Object.entries(examplePhotos).find(([name]) => key(name) === key(item.name));
+  const imageUrl = match?.[1];
+  return imageUrl && Object.hasOwn(MENU_PHOTOS,imageUrl) ? {...item,imageUrl} : item;
+}
+
+function exampleMenu() {
+  const items = demo.items.map(item => {
+    const imageUrl = examplePhotos[item.name];
+    const example = item.name === 'Feijoada da casa'
+      ? {...item, addons:[{name:'Porção de cebola',price:200}]}
+      : {...item};
+    if (imageUrl && Object.hasOwn(MENU_PHOTOS,imageUrl)) example.imageUrl = imageUrl;
+    return example;
+  });
+  return json({...demo,items:orderMenuItems(items),demo:true,presentation:true,revision:0,today:today()});
+}
 const encode = new TextEncoder();
 const loginPage = '/gestao/login';
 const sessionName = '__Host-familia-gestao';
 const sessionSeconds = 8 * 60 * 60;
+const photoMaxBytes = 36 * 1024;
+const adminMaxBytes = 2200000;
 
 function cookie(value, maxAge) {
   return `${sessionName}=${value}; Path=/; Max-Age=${maxAge}; Secure; HttpOnly; SameSite=Strict`;
@@ -57,15 +88,69 @@ async function signIn(request, env, url) {
   return redirect('/gestao',cookie(`${expires}.${encoded}`,sessionSeconds));
 }
 
-function clean(data, current) {
+async function readAdminBody(request) {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = '';
+  for (;;) {
+    const {done, value} = await reader.read();
+    if (done) return text + decoder.decode();
+    size += value.byteLength;
+    if (size > adminMaxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    text += decoder.decode(value, {stream:true});
+  }
+}
+
+async function cleanPhoto(value, previous, index) {
+  if (value === undefined) return previous?.photo ? {photo:previous.photo, photoId:previous.photoId} : {};
+  if (value === '') return {};
+  if (typeof value !== 'string' || value.length > Math.ceil(photoMaxBytes / 3) * 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
+    throw new Error('Confira a foto do item ' + (index + 1) + '.');
+  }
+  const bytes = atob(value);
+  if (!bytes.startsWith('\xff\xd8\xff') || !bytes.endsWith('\xff\xd9')) {
+    throw new Error('A foto do item ' + (index + 1) + ' precisa estar em formato JPEG.');
+  }
+  return {photo:value, photoId:previous?.photo === value && previous.photoId ? previous.photoId : await digest(value)};
+}
+
+function cleanAddons(addons, previous, index) {
+  if (addons === undefined) return previous?.addons ?? [];
+  if (!Array.isArray(addons) || addons.length > 10) throw new Error(`O item ${index + 1} pode ter até 10 adicionais.`);
+  const names = new Set();
+  return addons.map(addon => {
+    const name = typeof addon?.name === 'string' ? addon.name.trim() : '';
+    const key = name.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/\p{Diacritic}/gu, '');
+    if (!name || name.length > 60 || /[\x00-\x1f\x7f]/.test(name) || names.has(key) ||
+        !Number.isInteger(addon.price) || addon.price < 0 || addon.price > 999999) {
+      throw new Error(`Confira os nomes e os preços dos adicionais do item ${index + 1}.`);
+    }
+    names.add(key);
+    return {name, price:addon.price};
+  });
+}
+
+async function clean(data, current) {
   const phone = typeof data.phone === 'string' ? data.phone.replace(/\D/g,'') : '';
   if (phone && !/^55[1-9]\d[2-9]\d{7,8}$/.test(phone)) throw new Error('Informe o WhatsApp com +55, DDD e número.');
   if (!Number.isInteger(data.fee) || data.fee < 0 || data.fee > 99999) throw new Error('Confira a taxa de entrega.');
   if (!['publish','contact'].includes(data.action)) throw new Error('Ação inválida.');
-  if (data.action === 'contact') return { ...current, phone, fee: data.fee };
+  if (data.action === 'contact') {
+    const waitMinutes = data.waitMinutes === undefined ? (current.waitMinutes ?? null) : data.waitMinutes;
+    const pixKey = data.pixKey === undefined ? (current.pixKey ?? '') : data.pixKey;
+    if (waitMinutes !== null && (!Number.isInteger(waitMinutes) || waitMinutes < 1 || waitMinutes > 600)) throw new Error('Informe uma espera de 1 a 600 minutos.');
+    if (typeof pixKey !== 'string' || pixKey.length > 100 || /[\x00-\x1f\x7f]/.test(pixKey)) throw new Error('Informe uma chave Pix de até 100 caracteres.');
+    return { ...current, phone, fee: data.fee, waitMinutes, pixKey:pixKey.trim() };
+  }
   if (!Array.isArray(data.items) || data.items.length < 1 || data.items.length > 20) throw new Error('Inclua de 1 a 20 itens.');
   const names = new Set();
-  const items = data.items.map((item, index) => {
+  const previous = new Map(current.items.map(item => [item.name.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/\p{Diacritic}/gu,''), item]));
+  const items = await Promise.all(data.items.map(async (item, index) => {
     const name = typeof item?.name === 'string' ? item.name.trim() : '';
     const description = typeof item?.description === 'string' ? item.description.trim() : '';
     const key = name.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/\p{Diacritic}/gu,'');
@@ -74,9 +159,18 @@ function clean(data, current) {
       throw new Error(`Confira o nome, a categoria e o preço do item ${index + 1}.`);
     }
     names.add(key);
-    return { name, description, category: item.category, price: item.price };
-  });
-  return { phone, fee: data.fee, items, day: today() };
+    const existing = previous.get(key);
+    const originalPrice = item.originalPrice === undefined ? (existing?.originalPrice ?? null) : item.originalPrice;
+    const bundle = item.bundle === undefined ? (existing?.bundle ?? []) : item.bundle;
+    if (originalPrice !== null && (!Number.isInteger(originalPrice) || originalPrice <= item.price || originalPrice > 999999)) throw new Error('Confira o preço antigo do item ' + (index + 1) + '.');
+    if (!Array.isArray(bundle) || bundle.length > 10 || bundle.some(line=>typeof line !== 'string' || !line.trim() || line.length > 100 || /[\x00-\x1f\x7f]/.test(line))) throw new Error('Confira os itens do combo ' + (index + 1) + '.');
+    const addons = cleanAddons(item.addons, existing, index);
+    const offerPhoto = await cleanPhoto(item.promotionPhoto, {photo:existing?.promotionPhoto,photoId:existing?.promotionPhotoId}, index);
+    return { name, description, category: item.category, price: item.price, originalPrice, bundle:bundle.map(line=>line.trim()), addons,
+      promotionPhoto:offerPhoto.photo ?? '', promotionPhotoId:offerPhoto.photoId ?? '',
+      ...await cleanPhoto(item.photo, existing, index) };
+  }));
+  return { ...current, phone, fee: data.fee, items, day: today() };
 }
 
 export default {
@@ -109,8 +203,8 @@ export default {
         }
       }
     }
-    if (request.method === 'GET' && path === '/hero.jpg' && HERO) {
-      return new Response(Uint8Array.from(atob(HERO), char => char.charCodeAt(0)), {headers:{'Content-Type':'image/jpeg','Cache-Control':'public, max-age=86400'}});
+    if (request.method === 'GET' && Object.hasOwn(MENU_PHOTOS,path) && MENU_PHOTOS[path]) {
+      return new Response(Uint8Array.from(atob(MENU_PHOTOS[path]), char => char.charCodeAt(0)), {headers:{'Content-Type':'image/jpeg','Cache-Control':'public, max-age=86400'}});
     }
     if (request.method === 'GET' && Object.hasOwn(ASSETS,path)) {
       const type = path.endsWith('.css') ? 'text/css' : path.endsWith('.js') ? 'text/javascript' : 'text/html';
@@ -119,30 +213,48 @@ export default {
         url.searchParams.get('erro') === '1' ? '<p class="feedback" role="alert">Usuário ou senha incorretos.</p>' : '') : ASSETS[path];
       return new Response(asset,{headers:{'Content-Type':`${type}; charset=utf-8`,'Cache-Control':privatePage?'no-store':'no-cache',
         ...(privatePage?{'X-Robots-Tag':'noindex, nofollow'}:{}),
-        'Content-Security-Policy':"default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; form-action 'self'; base-uri 'none'" + (privatePage ? "; frame-ancestors 'none'" : ''),'Referrer-Policy':privatePage ? 'same-origin' : 'no-referrer'}});
+        'Content-Security-Policy':path === '/audio-order-worker.js'
+          ? "default-src 'none'; script-src https://cdn.jsdelivr.net blob: 'wasm-unsafe-eval'; connect-src https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co"
+          : "default-src 'self'; img-src 'self'" + (path === '/gestao' ? ' data: blob:' : '') +
+            (path === '/' ? "; media-src 'self' blob:" : '') +
+            "; style-src 'self'; script-src 'self'; form-action 'self'; base-uri 'none'" + (privatePage ? "; frame-ancestors 'none'" : ''),'Referrer-Policy':privatePage ? 'same-origin' : 'no-referrer'}});
     }
-    if (!['/api/menu','/api/admin'].includes(path)) return json({error:'Página não encontrada.'},404);
+    const imageId = request.method === 'GET' && /^\/fotos\/([a-f0-9]{64})\.jpg$/.exec(path)?.[1];
+    if (request.method === 'GET' && path === '/api/menu' && url.searchParams.get('apresentacao') === '1') return exampleMenu();
+    if (!imageId && !['/api/menu','/api/admin'].includes(path)) return json({error:'Página não encontrada.'},404);
     try {
+      if (imageId) {
+        const image = await env.DB.prepare("SELECT json_extract(item.value, '$.photo') AS photo FROM restaurant, json_each(settings, '$.items') AS item WHERE restaurant.id = 1 AND json_extract(item.value, '$.photoId') = ? UNION ALL SELECT json_extract(item.value, '$.promotionPhoto') AS photo FROM restaurant, json_each(settings, '$.items') AS item WHERE restaurant.id = 1 AND json_extract(item.value, '$.promotionPhotoId') = ?").bind(imageId,imageId).first();
+        if (!image?.photo) return json({error:'Foto não encontrada.'},404);
+        return new Response(Uint8Array.from(atob(image.photo), character => character.charCodeAt(0)), {
+          headers:{'Content-Type':'image/jpeg','Cache-Control':'public, max-age=86400, immutable','X-Content-Type-Options':'nosniff'},
+        });
+      }
       const row = await env.DB.prepare('SELECT owner, settings, revision FROM restaurant WHERE id = 1').first();
       const settings = row ? JSON.parse(row.settings) : demo;
       const revision = row?.revision ?? 0;
       if (path === '/api/menu' && request.method === 'GET') {
         const active = !settings.day || settings.day === today();
-        return json({ ...settings, items: active ? settings.items : [], demo: !settings.day, revision, today: today() });
+        const items = active ? settings.items.map(({photo, photoId, promotionPhoto, promotionPhotoId, ...item}) => {
+          const chosen = (item.originalPrice || item.bundle?.length) && promotionPhotoId ? promotionPhotoId : photoId;
+          return chosen ? {...item,imageUrl:'/fotos/' + chosen + '.jpg'} : withMenuPhoto(item);
+        }) : [];
+        return json({phone:settings.phone, fee:settings.fee, day:settings.day, waitMinutes:settings.waitMinutes ?? null,
+          pixKey:settings.pixKey ?? '', items:orderMenuItems(items), demo: !settings.day, revision, today: today()});
       }
       if (path !== '/api/admin') return json({error:'Método inválido.'},405);
       if (!adminSession && row && row.owner !== identity) return json({error:'O painel pertence à conta responsável.'},403);
-      if (request.method === 'GET') return json({ ...settings, revision, today: today() });
+      if (request.method === 'GET') return json({ ...settings, items:settings.items.map(withMenuPhoto), revision, today: today() });
       if (request.method !== 'PUT' || !request.headers.get('content-type')?.startsWith('application/json') ||
           (adminSession && request.headers.get('origin') !== url.origin) ||
           (request.headers.has('origin') && request.headers.get('origin') !== url.origin)) return json({error:'Solicitação inválida.'},400);
-      const raw = await request.text();
-      if (raw.length > 15000) return json({error:'Dados acima do limite.'},413);
+      const raw = await readAdminBody(request);
+      if (raw === null) return json({error:'Dados acima do limite.'},413);
       let next;
       try {
         const data = JSON.parse(raw);
         if (data.revision !== revision) return json({error:'O painel mudou. Reabra para carregar os dados mais recentes.'},409);
-        next = clean(data, settings);
+        next = await clean(data, settings);
       } catch (error) { return json({error:error.message},400); }
       const result = await env.DB.prepare(`INSERT INTO restaurant (id,owner,settings,revision) VALUES (1,?,?,1)
         ON CONFLICT(id) DO UPDATE SET settings=excluded.settings, revision=restaurant.revision+1

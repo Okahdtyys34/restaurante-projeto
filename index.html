@@ -3,47 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="description" content="Cardápio do dia e pedidos online do Restaurante da Família.">
-  <meta name="theme-color" content="#f3f5fa">
-  <title>Restaurante da Família · Cardápio e pedidos</title>
+  <meta name="description" content="Cardápio do dia e pedidos online do Restaurante Fontenele.">
+  <meta name="theme-color" content="#075930">
+  <title>Restaurante Fontenele · Cardápio e pedidos</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/loja.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body class="storefront">
   <a class="skip-link" href="#cardapio">Ir para o cardápio</a>
   <header class="topbar"><div class="wrap top-inner">
-    <a class="brand" href="/" aria-label="Restaurante da Família, início">
+    <a class="brand" href="/" aria-label="Restaurante Fontenele, início">
       <span class="brand-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14h16a8 8 0 0 1-16 0ZM2 14h20M9 5c-3 3 3 3 0 6m6-8c-3 3 3 4 0 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span><small>RESTAURANTE DA</small><b>Família</b></span>
+      <span><small>RESTAURANTE</small><b>Fontenele</b></span>
     </a>
-    <nav aria-label="Navegação principal"><a href="#carrinho" class="nav-cart"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8h16l1 13H3L4 8Z" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg> Meu pedido <span id="nav-count">0</span></a></nav>
+    <nav aria-label="Navegação principal">
+      <a href="#cardapio" class="nav-menu">Cardápio</a>
+      <a href="#carrinho" class="nav-cart"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8h16l1 13H3L4 8Z" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg> Meu pedido <span id="nav-count">0</span></a>
+    </nav>
   </div></header>
 
   <main class="wrap">
-    <div class="order-layout" id="cardapio">
-      <section class="menu-section" aria-labelledby="menu-title">
-        <header class="menu-intro">
-          <div class="menu-intro-copy">
-            <div class="menu-meta"><span class="eyebrow">Da cozinha da família</span><span id="menu-date" class="date"></span></div>
-            <h1 id="menu-title">Cardápio<br>do dia</h1>
-            <p class="menu-lead">Monte seu almoço para entrega ou retirada.</p>
+    <header class="menu-intro">
+      <div class="menu-intro-copy">
+        <p class="service-label">Entrega e retirada</p>
+        <h1>Almoço no <br><span>Fontenele</span></h1>
+        <p class="menu-lead">Escolha o que vai pro seu prato no cardápio de hoje.</p>
+        <a class="button hero-action" href="#cardapio">Ver cardápio <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="menu-intro-photo">
+        <img src="/banner-fontenele.jpg" alt="Prato de frango grelhado com arroz, feijão e salada" width="1993" height="789" fetchpriority="high">
+      </div>
+    </header>
+    <div class="order-layout">
+      <section class="menu-section" id="cardapio" aria-labelledby="menu-title" tabindex="-1">
+        <header class="catalog-heading">
+          <div>
+            <p id="menu-date" class="date"></p>
+            <h2 id="menu-title">Cardápio do dia</h2>
           </div>
-          <div class="menu-intro-photo">
-            <img src="/hero.jpg" alt="Feijoada com arroz, couve e farofa" width="800" height="500">
-          </div>
+          <p id="wait-estimate" class="wait-estimate" hidden></p>
         </header>
         <div class="catalog-tools">
-          <div id="filters" class="filters" aria-label="Categorias do cardápio"></div>
-          <form id="quick-form" class="quick"><label class="sr-only" for="quick-item">Número ou nome do item</label><input id="quick-item" enterkeyhint="go" placeholder="Ex.: 1 ou feijoada" autocomplete="off" maxlength="85"><button class="button secondary" type="submit">Adicionar</button></form>
+          <div id="filters" class="filters" role="group" aria-label="Categorias do cardápio"></div>
         </div>
-        <p id="menu-note" class="subtitle">Escolha um prato ou adicione pelo número ou nome.</p>
+        <p id="menu-note" class="subtitle" hidden></p>
         <p id="feedback" class="feedback success-feedback" role="status"></p>
         <ul id="menu-items" class="menu-items" aria-label="Itens do cardápio"></ul>
         <p id="empty-menu" class="empty-menu" role="status">Carregando o cardápio…</p>
       </section>
       <div class="order-rail">
-      <aside id="carrinho" class="cart" aria-labelledby="cart-title">
-        <div class="cart-head"><div><p class="eyebrow">Cesta de almoço</p><h2 id="cart-title">Meu pedido</h2></div><span id="cart-count" class="cart-count">0 itens</span></div>
+      <aside id="carrinho" class="cart" aria-labelledby="cart-title" tabindex="-1">
+        <div class="cart-head"><h2 id="cart-title">Meu pedido</h2><span id="cart-count" class="cart-count">0 itens</span></div>
         <div id="cart-empty" class="cart-empty"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8h16l1 13H3L4 8Z" stroke-linejoin="round"/><path d="M8 9V6a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg><b>Seu carrinho está vazio</b><p>Adicione um item do cardápio para começar.</p></div>
         <ul id="cart-items" class="cart-items" aria-label="Itens no carrinho"></ul>
         <div class="subtotal"><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
@@ -59,30 +70,51 @@
     <button id="mobile-checkout" class="button primary" type="button">Continuar pedido <span aria-hidden="true">→</span></button>
   </div>
 
-  <footer class="footer"><div class="wrap"><span>Restaurante da Família</span><a href="#cardapio">Voltar ao cardápio ↑</a></div></footer>
+  <footer class="footer"><div class="wrap"><span>Restaurante Fontenele</span><a href="#cardapio">Voltar ao cardápio ↑</a></div></footer>
+
+  <dialog id="product-options" aria-labelledby="product-options-title">
+    <div class="dialog-head"><h2 id="product-options-title"></h2><button id="product-options-close" class="close" type="button" aria-label="Fechar adicionais">×</button></div>
+    <form id="product-options-form">
+      <fieldset><legend>Adicionais opcionais</legend><div id="product-addon-list"></div></fieldset>
+      <div class="subtotal"><span>Total</span><strong id="product-options-total" aria-live="polite"></strong></div>
+      <button id="product-options-submit" type="submit" class="button primary full">Adicionar ao pedido</button>
+    </form>
+  </dialog>
 
   <dialog id="checkout" aria-labelledby="checkout-title">
     <div class="dialog-head"><div><div id="checkout-step" class="eyebrow">1 DE 2 · DADOS DO PEDIDO</div><h2 id="checkout-title" tabindex="-1">Finalizar pedido</h2></div><button class="close" type="button" data-close="checkout" aria-label="Fechar">×</button></div>
     <form id="checkout-form">
-      <fieldset><legend>Como deseja receber?</legend><div class="choices">
+      <fieldset><legend>Entrega ou retirada?</legend><div class="choices">
         <label><input type="radio" name="mode" value="pickup" checked> Retirada</label>
         <label><input type="radio" name="mode" value="delivery"> Entrega <span id="fee-label"></span></label>
       </div></fieldset>
       <div class="checkout-fields">
-      <label for="name">Seu nome</label><input id="name" name="name" autocomplete="name" maxlength="70" required>
-      <div id="address-box" hidden><label for="address">Endereço com número e bairro</label><input id="address" name="address" autocomplete="street-address" maxlength="200"></div>
-      <label for="payment">Forma de pagamento</label><select id="payment" name="payment" required><option value="pix">Pix a combinar</option><option value="card">Cartão no recebimento</option><option value="cash">Dinheiro</option></select>
+      <label for="name">Nome</label><input id="name" name="name" autocomplete="name" minlength="2" maxlength="70" required>
+      <label for="customer-phone">Telefone com DDD</label><input id="customer-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" required placeholder="Ex.: (85) 99999-9999">
+      <div id="address-box" hidden>
+        <label for="street">Rua</label><input id="street" name="street" autocomplete="address-line1" maxlength="120">
+        <label for="address-number">Número</label><input id="address-number" name="number" maxlength="20" placeholder="Ex.: 123 ou s/n">
+        <label for="neighborhood">Bairro</label><input id="neighborhood" name="neighborhood" maxlength="80">
+      </div>
+      <label for="payment">Forma de pagamento</label><select id="payment" name="payment" required><option value="pix">Pix</option><option value="card">Cartão no recebimento</option><option value="cash">Dinheiro</option></select>
       <div id="change-box" hidden><label for="change">Troco para quanto? (opcional)</label><input id="change" name="change" inputmode="decimal" placeholder="Ex.: 50,00" maxlength="12"></div>
-      <label for="note">Observações (opcional)</label><textarea id="note" name="note" rows="2" maxlength="200" placeholder="Ex.: sem cebola"></textarea>
+      <div id="checkout-product-notes"></div>
       </div>
       <div class="subtotal"><span>Total</span><strong id="checkout-total"></strong></div>
       <p id="checkout-error" class="feedback" role="alert"></p>
-      <button type="submit" class="button primary full">Revisar resumo <span aria-hidden="true">→</span></button>
+      <button type="submit" class="button primary full">Ver resumo <span aria-hidden="true">→</span></button>
     </form>
     <section id="summary-box" hidden>
-      <p>Confira os itens, os dados e o valor do pedido.</p>
+      <p>Confira seu pedido.</p>
       <p id="receipt-notice" class="feedback" role="status"></p>
       <div id="receipt" class="receipt"></div>
+      <section id="pix-info" class="pix-info" aria-labelledby="pix-title" hidden>
+        <h3 id="pix-title">Chave Pix</h3>
+        <label class="sr-only" for="customer-pix-key">Chave Pix do restaurante</label>
+        <input id="customer-pix-key" readonly>
+        <button id="copy-pix" class="button secondary" type="button">Copiar chave Pix</button>
+        <p id="pix-copy-feedback" class="feedback" role="status"></p>
+      </section>
       <label class="sr-only" for="summary">Texto para copiar</label><textarea id="summary" rows="6" readonly hidden></textarea>
       <p id="handoff-note" class="cart-note"></p>
       <button id="whatsapp" class="button primary full" type="button" hidden>Abrir no WhatsApp <span aria-hidden="true">↗</span></button>

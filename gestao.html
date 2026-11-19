@@ -3,46 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f3f5fa">
+  <meta name="theme-color" content="#075930">
   <meta name="robots" content="noindex,nofollow">
-  <title>Painel do restaurante · Restaurante da Família</title>
+  <title>Painel do restaurante · Restaurante Fontenele</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/gestao.css">
   <script type="module" src="/gestao.js"></script>
 </head>
 <body class="admin-page">
   <a class="skip-link" href="#painel">Ir para o painel</a>
-  <header class="topbar"><div class="wrap top-inner">
-    <div class="brand">
+  <aside class="dashboard-sidebar" aria-label="Menu administrativo">
+    <div class="brand dashboard-brand">
       <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14h16a8 8 0 0 1-16 0ZM2 14h20M9 5c-3 3 3 3 0 6m6-8c-3 3 3 4 0 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span><small>RESTAURANTE DA</small><b>Família</b></span>
+      <span><small>RESTAURANTE</small><b>Fontenele</b></span>
     </div>
-    <div class="filters management-header-actions">
-      <a class="button secondary view-menu" href="/">Ver cardápio <span aria-hidden="true">↗</span></a>
-      <form action="/gestao/sair" method="post"><button class="button secondary" type="submit">Sair</button></form>
+    <nav class="management-nav" aria-label="Seções do painel" hidden>
+      <a href="#editor">Cardápio</a>
+      <a href="#promocoes">Promoções</a>
+      <a href="#contato">Pedidos e recebimento</a>
+    </nav>
+    <div class="dashboard-sidebar-actions">
+      <a class="view-menu" href="/">Ver cardápio <span aria-hidden="true">↗</span></a>
+      <form action="/gestao/sair" method="post"><button type="submit">Sair</button></form>
     </div>
-  </div></header>
+  </aside>
 
-  <main id="painel" class="wrap management">
+  <main id="painel" class="management">
     <header class="management-intro">
-      <div class="eyebrow">Área do restaurante</div>
-      <h1>Painel do restaurante</h1>
-      <p>Edite os pratos de hoje e configure o recebimento dos pedidos.</p>
+      <div>
+        <h1>Painel do restaurante</h1>
+        <p>Atualize o cardápio e as configurações que o cliente vê ao fazer o pedido.</p>
+      </div>
+      <p id="dashboard-date" class="dashboard-date" hidden></p>
     </header>
 
     <section class="management-overview" aria-label="Situação do restaurante">
       <div><span>Cardápio de hoje</span><p id="admin-status" class="management-status" role="status">Carregando painel…</p></div>
-      <div><span>Pedidos pelo WhatsApp</span><p id="contact-state" class="management-status" role="status">—</p><a id="contact-jump" href="#contato" hidden>Editar contato e taxa</a></div>
+      <div><span>Itens no editor</span><p id="editor-count" class="management-status" role="status">—</p></div>
+      <div><span>Espera média</span><p id="wait-state" class="management-status">—</p></div>
+      <div><span>Recebimento</span><p id="contact-state" class="management-status" role="status">—</p><p id="pix-state" class="metric-detail"></p></div>
     </section>
 
     <div id="settings" class="management-grid" hidden>
-      <nav class="management-nav" aria-label="Seções do painel">
-        <a href="#editor">Cardápio</a>
-        <a href="#contato">Contato e entrega</a>
-      </nav>
       <section id="editor" class="management-card menu-editor" aria-labelledby="editor-title">
-        <div class="editor-heading"><div><p class="editor-kicker">PUBLICAÇÃO DIÁRIA</p><h2 id="editor-title" tabindex="-1">Editar cardápio</h2></div><button id="row-add" type="button" class="button secondary">+ Adicionar item</button></div>
-        <p>Edite os nomes e preços. O cardápio publicado vale até a meia-noite.</p>
+        <div class="editor-heading"><h2 id="editor-title" tabindex="-1">Editar cardápio</h2><button id="row-add" type="button" class="button secondary">+ Adicionar item</button></div>
+        <p>O cardápio publicado vale até a meia-noite.</p>
         <p id="draft-state" role="status" class="draft-state" hidden></p>
         <button id="discard-draft" type="button" class="link-button" hidden>Descartar rascunho</button>
         <form id="menu-form" novalidate>
@@ -59,19 +64,48 @@
         </form>
       </section>
 
+      <section id="promocoes" class="management-card" aria-labelledby="promocoes-title" hidden>
+        <div class="editor-heading"><h2 id="promocoes-title" tabindex="-1">Promoções e combos</h2><button id="offer-add" type="button" class="button secondary">Adicionar promoção</button></div>
+        <p>Selecione os produtos e defina o preço do pacote.</p>
+        <p id="offers-empty" class="cart-note">Nenhuma promoção cadastrada.</p>
+        <div id="offers-list"></div>
+        <p id="offers-status" class="feedback" role="status"></p>
+        <button type="submit" form="menu-form" class="button primary">Publicar promoções</button>
+      </section>
       <section id="contato" class="management-card contact-settings" aria-labelledby="contact-title">
-        <p class="editor-kicker">RECEBIMENTO</p>
-        <h2 id="contact-title" tabindex="-1">Contato e entrega</h2>
-        <p>Defina o número que recebe os pedidos e a taxa que aparece no resumo.</p>
+        <h2 id="contact-title" tabindex="-1">Pedidos e recebimento</h2>
+        <p>Configure o WhatsApp, a entrega e as informações que o cliente vê no pedido.</p>
         <form id="contact-form" novalidate>
-          <label for="phone">WhatsApp do restaurante</label>
-          <input id="phone" name="phone" inputmode="tel" autocomplete="tel" placeholder="+55 (85) 99999-9999" maxlength="24" aria-describedby="phone-error">
-          <p id="phone-error" class="field-error"></p>
-          <label for="delivery-fee">Taxa de entrega em reais</label>
-          <input id="delivery-fee" name="fee" inputmode="decimal" placeholder="5,00" maxlength="10" required aria-describedby="fee-error">
-          <p id="fee-error" class="field-error"></p>
-          <button class="button primary full" type="submit">Salvar contato e taxa</button>
-          <p id="contact-status" class="feedback success-feedback" role="status"></p>
+          <fieldset>
+            <legend>Contato</legend>
+            <label for="phone">WhatsApp do restaurante</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+55 (85) 99999-9999" maxlength="24" aria-describedby="phone-error">
+            <p id="phone-error" class="field-error"></p>
+          </fieldset>
+          <fieldset class="delivery-fields">
+            <legend>Entrega</legend>
+            <div>
+              <label for="delivery-fee">Taxa de entrega em reais</label>
+              <input id="delivery-fee" name="fee" inputmode="decimal" placeholder="5,00" maxlength="10" required aria-describedby="fee-error">
+              <p id="fee-error" class="field-error"></p>
+            </div>
+            <div>
+              <label for="wait-minutes">Tempo médio de espera em minutos</label>
+              <input id="wait-minutes" type="number" inputmode="numeric" min="1" max="600" step="1" placeholder="Ex.: 35" aria-describedby="wait-error">
+              <p id="wait-error" class="field-error"></p>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Pagamento</legend>
+            <label for="pix-key">Chave Pix</label>
+            <input id="pix-key" type="text" maxlength="100" autocapitalize="none" spellcheck="false" aria-describedby="pix-error pix-help">
+            <p id="pix-error" class="field-error"></p>
+            <p id="pix-help" class="cart-note">A chave aparece no resumo e na mensagem do WhatsApp quando o cliente escolhe Pix.</p>
+          </fieldset>
+          <div class="editor-actions">
+            <p id="contact-status" class="feedback success-feedback" role="status"></p>
+            <button class="button primary" type="submit">Salvar configurações</button>
+          </div>
         </form>
       </section>
     </div>
